@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>管理后台</title>
+    <%= stylesheet_link_tag "/javascripts/ext/resources/css/ext-all.css" %>
+    <%= stylesheet_link_tag "/javascripts/ext/resources/css/ext-patch.css" %>
+    <%= javascript_include_tag "ext/adapter/ext/ext-base-debug.js" %>
+    <%= javascript_include_tag "ext/ext-all-debug.js" %>
+    <%= javascript_include_tag "/javascripts/application.js" %>
+    <%= javascript_include_tag "extjs/locale/ext-lang-zh_CN.js" %>
+  </head>
+  <body>
+    <script type="text/javascript">
+
+      Ext.onReady(function(){
+
+        Ext.QuickTips.init();
+
+        var loginName = new Ext.form.TextField({
+          fieldLabel: '登录名',
+          name: 'login_name',
+          allowBlank: false,
+          blankText: "登录名不能为空",
+          enableKeyEvents: true,
+          anchor: '90%',
+          listeners: {
+            scope: this,
+            keypress: function(field, e) {
+              if (e.getKey() == 13) {
+                loginPwd.focus(true);
+              }
+            }
+          }
+        })
+
+        var loginPwd = new Ext.form.TextField({
+          fieldLabel: '登录密码',
+          name: 'login_pwd',
+          inputType: 'password', 
+          allowBlank: false,
+          blankText: "登录密码不能为空",
+          enableKeyEvents: true,
+          anchor: '90%',
+          listeners: {
+            scope: this,
+            keypress: function(field, e) {
+              if (e.getKey() == 13) {
+                submit.focus(true)
+              }
+            }
+          }
+        })
+
+        var submit = new Ext.Button({
+          text: '确定',
+          scope: this,
+          handler: function() {
+            submit.setDisabled(true);
+            if (form.form.isValid()) {
+              form.form.submit({
+                method: 'POST',
+                scope: this,
+                success: function(result, response) {
+                  if (response.result.info == "success") {
+                    //登录成功,转向主页面
+                    window.location = '/'
+                  } else {
+                    Ext.MessageBox.alert('消息', response.result.info);
+                    submit.setDisabled(false);
+                    loginName.focus(true);
+                  }
+                },
+                failure: function(result, response) {
+                  Ext.MessageBox.alert('提示', response.result.info);
+                  submit.setDisabled(true);
+                }
+              });
+            } else {
+              submit.setDisabled(false);
+              Ext.MessageBox.alert('输入验证有错', '请输入必输选项');
+            }
+          }
+        })
+
+        var reset = new Ext.Button ({
+          text: '重置',
+          scope: this,
+          handler: function() {
+            form.form.reset()
+          }
+        })
+      
+
+        var form = new Ext.form.FormPanel({
+          labelWidth: 65,
+          url: '/home/validate_user',
+          buttonAlign: 'center',
+          bodyStyle: 'padding:5px;',
+          layout: 'column',
+          frame: true,
+          defaults: {
+            enableKeyEvents: true,
+            anchor: '90%',
+            allowBlank: false
+          },
+          items: [
+            {
+              id: 'formImg',
+              columnWidth: 1,
+              bodyStyle: Ext.isIE ? 'padding:15px 0 5px 15px;' : 'padding:10px 15px;',
+              border: false,
+              xtype: 'panel',
+              html: '<img src = "/images/bg.jpg" width="500" height="363"/>'
+            },
+            {
+              id: 'formTable',
+              columnWidth: 1,
+              xtype: 'panel',
+              labelWidth: 80,
+              buttonAlign: 'center',
+              layout: 'column',
+              bodyStyle: Ext.isIE ? 'padding:15px 0 5px 15px;' : 'padding:10px 15px;',
+              border: false,
+              items: [{
+                  columnWidth:.5,
+                  layout:'form',
+                  items:[loginName]            
+                },
+                {
+                  columnWidth:.5,
+                  layout:'form',
+                  items:[loginPwd]          
+                }
+              ],
+              buttons: [submit,reset]}
+          ]
+        });
+
+        var dlg = new Ext.Window({
+          width: 580,
+          height: 520,
+          title: '管理后台',
+          plain: true,
+          closable: false,
+          resizable: false,
+          frame: true,
+          layout: 'fit',
+          closeAction: 'hide',
+          border: false,
+          modal: true,
+          items: [form]
+        });
+        
+        dlg.show();
+      })
+    </script>
+  </body>
+</html>

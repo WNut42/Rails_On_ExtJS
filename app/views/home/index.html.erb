@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>管理后台</title>
+    <%= stylesheet_link_tag "/javascripts/ext/resources/css/ext-all.css" %>
+    <%= stylesheet_link_tag "/stylesheets/images.css" %>
+
+    <%= javascript_include_tag "ext/adapter/ext/ext-base.js" %>
+    <%= javascript_include_tag "ext/ext-all.js" %>
+    <%= javascript_include_tag "ext/src/locale/ext-lang-zh_CN.js" %>
+
+    <script type="text/javascript">
+      Ext.QuickTips.init();
+      Ext.lib.Ajax.defaultPostHeader += ";charset=UTF-8";
+
+      Ext.onReady(function() {
+        var exitButton = new Ext.Button({
+          text: '退出系统',
+          iconCls: 'exit',
+          scope: this,
+          handler: function(){
+            exitButton.setDisabled(true);
+            Ext.Ajax.request({
+              url: '/home/logout',
+              method: 'post', 
+              success: function(result,response){
+                window.document.location.href = 'home/login'
+              },
+              failure: function(result,response){
+                exitButton.setDisabled(false);
+                Ext.MessageBox.alert('提示','通讯错误，请重新操作');
+              }
+            })
+          }
+        }) 
+        
+        var topPanel = new Ext.Panel({
+          frame:false,
+          height:0,
+          tbar: ['<b style="font-size:14px;">后台管理界面</b>', '->', exitButton],
+          cls:'empty',
+          region:'north'
+        });
+
+        //左边的菜单栏
+        var accordition = new Ext.Panel({
+          region:'west',
+          margins:'5 0 5 5',
+          split:true,
+          width: 140,
+          layout:'accordion'
+        });
+
+
+
+        //工作区
+        var workTabs = new Ext.TabPanel({
+          //renderTo:'tabs',
+          region:'center',
+          activeTab: 0,
+          resizeTabs:true, // turn on tab resizing
+          minTabWidth: 115,
+          tabWidth:135,
+          enableTabScroll:true,
+          defaults: {autoScroll:true}
+        });
+
+        var reminderPanel = new Ext.Panel({
+          title: '系统提醒',
+          id:'reminder_panel',
+          //html: '&lt;empty panel&gt;',
+          //cls:'cellpadding:10',
+          defaults:{margins:'5 5 5 5'},
+          //bodyStyle: 'padding:15px;align:center',
+          html:'',
+          listeners: {
+            //expand: showAgileDiagram
+          }
+        });
+        workTabs.add(reminderPanel).show();
+
+        workTabs.openTab = function(node) {
+          
+          var id = node.attributes.url;
+          var url = node.attributes.url;
+          var tabTitle = node.text;
+          var titleStyle = ['background:url(\'', node.ui.getIconEl().src, '\') no-repeat; padding-left:20px'].join('');
+
+          workTabs.getItem(0).setTitle(tabTitle);
+          workTabs.getItem(0).load({
+            url: url,
+            scripts: true
+          });
+          
+          workTabs.getItem(0).show();
+        };
+
+        var viewport = new Ext.Viewport({
+          layout:'border',
+          items:[topPanel,accordition, workTabs]
+        });
+
+        //添加详细菜单
+        function renderMenu(){
+          var menus = eval(<%=raw @menus%>);
+          if (!menus) { return; }
+          for (var i = 0; i < menus.length; i++) {
+            var item = menus[i];
+
+            var title = "<div style='background:url(" + item.image +
+              ") no-repeat;padding-left:20px;'>" +
+              item.name +
+              "</div>";
+            for (var j = 0; j < item.children.length; j++) {
+              var o = item.children[j];
+              o.text = o.name;
+              o.icon = o.image;
+            }
+            var node = new Ext.tree.TreePanel({
+              title: title,
+              rootVisible: false,
+              lines: false,
+              autoScroll: true,
+              qtips: item.qitps,
+              root: {
+                editable: false,
+                expanded: true,
+                text: item.name,
+                draggable: false,
+                children: item.children
+              },
+              listeners: {                    
+                click: function(node, e) {
+                  workTabs.openTab(node);
+                }
+              }
+            });
+            accordition.add(node);
+          }
+          accordition.doLayout();
+        }
+        renderMenu();
+      });
+    </script>
+  </head>
+  <body>
+
+  </body>
+</html>
