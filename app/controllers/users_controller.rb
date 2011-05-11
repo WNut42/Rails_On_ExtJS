@@ -23,7 +23,7 @@ class UsersController < ApplicationController
         info = (User.create(:name => params[:name].to_s,:age => params[:age].to_i,:password => params[:name].to_s) ? 'success' : '更新失败')
       end
     rescue Exception => e
-      logger.info e.to_s
+      logger.error e.to_s
       info = '更新失败'
     end
     render :text => get_result(info),:layout => false
