@@ -24,7 +24,7 @@ class UsersController < ApplicationController
       end
     rescue Exception => e
       logger.error e.to_s
-      info = '更新失败'
+      info = '创建失败'
     end
     render :text => get_result(info),:layout => false
   end
