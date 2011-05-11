@@ -10,7 +10,11 @@ class ApplicationController < ActionController::Base
     
   end
 
-  def get_json info
+  def get_result info
     "{success:true,info:\"#{info}\"}"
+  end
+
+  def get_json count,json 
+    "{totalProperty:#{count},root:#{json}}"
   end
 end

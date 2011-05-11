@@ -1,83 +1,70 @@
 class UsersController < ApplicationController
-  # GET /users
-  # GET /users.xml
-  def index
-    @users = User.all
 
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => @users }
-    end
-  end
 
-  # GET /users/1
-  # GET /users/1.xml
-  def show
-    @user = User.find(params[:id])
-
-    respond_to do |format|
-      format.html # show.html.erb
-      format.xml  { render :xml => @user }
-    end
-  end
-
-  # GET /users/new
-  # GET /users/new.xml
   def new
-    @user = User.new
 
-    respond_to do |format|
-      format.html # new.html.erb
-      format.xml  { render :xml => @user }
-    end
   end
 
-  # GET /users/1/edit
   def edit
-    @user = User.find(params[:id])
+    begin
+      render :text => User.find(params[:id]).to_json,:layout => false
+    rescue ActiveRecord::RecordNotFound
+      logger.error '请求不存在的用户'
+    end
   end
 
-  # POST /users
-  # POST /users.xml
   def create
-    @user = User.new(params[:user])
 
-    respond_to do |format|
-      if @user.save
-        format.html { redirect_to(@user, :notice => 'User was successfully created.') }
-        format.xml  { render :xml => @user, :status => :created, :location => @user }
+    begin
+      users = User.find_by_name params[:name]
+      if users != nil
+        info = '用户名已存在，请更换'
       else
-        format.html { render :action => "new" }
-        format.xml  { render :xml => @user.errors, :status => :unprocessable_entity }
+        info = (User.create(:name => params[:name].to_s,:age => params[:age].to_i,:password => params[:name].to_s) ? 'success' : '更新失败')
       end
+    rescue Exception => e
+      logger.info e.to_s
+      info = '更新失败'
     end
+    render :text => get_result(info),:layout => false
   end
 
-  # PUT /users/1
-  # PUT /users/1.xml
+
   def update
-    @user = User.find(params[:id])
-
-    respond_to do |format|
-      if @user.update_attributes(params[:user])
-        format.html { redirect_to(@user, :notice => 'User was successfully updated.') }
-        format.xml  { head :ok }
+    begin
+      user = User.find(params[:id])
+      if user.name != params[:name].to_s && User.find_by_name(params[:name])
+        info = '用户名已存在'
       else
-        format.html { render :action => "edit" }
-        format.xml  { render :xml => @user.errors, :status => :unprocessable_entity }
+        user.name = params[:name]
+        user.age = params[:age]
+        info = user.save ? 'success' : '更新失败'
       end
+    rescue ActiveRecord::RecordNotFound
+      logger.error '更新不存在的用户'
+      info = '不存在的用户'
     end
+    render :text => get_result(info),:layout => false
   end
 
-  # DELETE /users/1
-  # DELETE /users/1.xml
-  def destroy
-    @user = User.find(params[:id])
-    @user.destroy
 
-    respond_to do |format|
-      format.html { redirect_to(users_url) }
-      format.xml  { head :ok }
+  def destroy
+    begin
+      ids = params[:id][1..params[:id].length-2].split(',')
+      User.destroy(ids)
+      info = 'success'
+    rescue Exception => e
+      logger.error e.to_s
+      info e.to_s
     end
+    render :text => get_result(info),:layout => false
+  end
+
+  def get_users_for_page
+    users = User.find_for_page params[:start].to_i,params[:limit].to_i 
+    count = User.count :all
+    json_str = get_json count,users.to_json
+    
+    render :text => json_str,:layout => false
   end
 end

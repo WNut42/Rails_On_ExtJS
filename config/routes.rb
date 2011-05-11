@@ -1,5 +1,5 @@
 RailsOnExtJS::Application.routes.draw do
-  resources :users
+  #resources :users,:member => {:users_list => :get}
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

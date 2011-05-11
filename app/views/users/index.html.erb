@@ -1,25 +1,161 @@
-<h1>Listing users</h1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>用户管理</title>
+    <script type="text/javascript">
+      var editUserWin;
+      var newUserWin;
+      var userId;
+      Ext.onReady(function(){
 
-<table>
-  <tr>
-    <th>Name</th>
-    <th>Age</th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </tr>
+        var userDS = new Ext.data.Store({
+          paramNames: {
+            start: "start",
+            limit: "limit"
+          },
+          baseParams: {
+            start: 0,
+            limit: pageSize
+          },
+          proxy: new Ext.data.HttpProxy({
+            url: '/users/get_users_for_page'
+          }),
+          reader: new Ext.data.JsonReader({
+            totalProperty: 'totalProperty',
+            root: 'root'
+          }, [
+            {name: 'id'},
+            {name: 'name'},
+            {name: 'age'},
+            {name: 'password'}
+          ])
+        });
+        var userSM = new Ext.grid.CheckboxSelectionModel();
+        var userCM = new Ext.grid.ColumnModel([
+          new Ext.grid.RowNumberer(),userSM,
+          {header: '用户姓名',dataIndex: 'name',width:80},
+          {header: '年龄',dataIndex: 'age',width:80},
+          {header: '密码',dataIndex: 'password',width:80}
+        ]);
 
-<% @users.each do |user| %>
-  <tr>
-    <td><%= user.name %></td>
-    <td><%= user.age %></td>
-    <td><%= link_to 'Show', user %></td>
-    <td><%= link_to 'Edit', edit_user_path(user) %></td>
-    <td><%= link_to 'Destroy', user, :confirm => 'Are you sure?', :method => :delete %></td>
-  </tr>
-<% end %>
-</table>
+        var addUserButton = new Ext.Button({
+          text: '添加用户',
+          width: 50,
+          iconCls: 'addItem',
+          handler: function(){
+            newUserWin = new Ext.Window({
+              width: 300,
+              height: 140,
+              closeAction: 'destroy',
+              modal: true,
+              title: '添加用户',
+              autoLoad: {
+                url: '/users/new',
+                scripts: true
+              }
+            });
+            newUserWin.on('destroy',function(){
+              userDS.reload();  
+            });
+            newUserWin.resizable = false;
+            newUserWin.show();
+          }
+        })
 
-<br />
+        var editUserButton = new Ext.Button({
+          text: '编辑用户',
+          width: 50,
+          iconCls: 'editItem',
+          handler: function(){
+            var records = userGrid.getSelectionModel().getSelections();
+            if(records.length == 0){
+              Ext.MessageBox.alert('提示信息','请选择要编辑的数据');
+            }else{
+              userId = records[0].get('id');
+              editUserWin = new Ext.Window({
+                title: '编辑用户',
+                width: 300,
+                height: 140,
+                closeAction: 'destroy',
+                modal: true,
+                autoLoad: {
+                  url: '/users/show?id='+userId,
+                  scripts: true
+                }
+              });
+              editUserWin.on('destroy',function(){
+                userDS.reload()  
+              })
+              editUserWin.resizable = false;
+              editUserWin.show()
+            }
+          }
+        })
 
-<%= link_to 'New User', new_user_path %>
+        delUserButton = new Ext.Button({
+          text: '删除用户',
+          width: 50,
+          iconCls: 'remove',
+          handler: function(){
+            if(userGrid.getSelectionModel().hasSelection()){
+              var rs = userGrid.getSelectionModel().getSelections();
+              var ids = [];
+              var name = '';
+              for(var i = 0 ; i < rs.length ; i++){
+                var data = rs[i].data
+                ids.push(data.id);
+                name += data.name + '<br />'
+              }
+              var keys = Ext.util.JSON.encode(ids)
+              Ext.MessageBox.confirm('警告','确定删除用户?<br /><font color="red">' + name + '</font>',function(button){
+                if(button == 'yes'){
+                  Ext.Ajax.request({
+                    url: 'users/destroy', 
+                    method: 'post',
+                    success: function(response,opts){
+                      var data = Ext.util.JSON.decode(response.responseText);
+                      if(data.success&&data.info == 'success'){
+                        userDS.reload();
+                        Ext.Msg.alert('提示','已成功删除');
+                      }else{
+                        Ext.Msg.alert('提示',data.info);
+                      }
+                      
+                    },
+                    params:{'id':keys}
+                  })
+                }  
+              })
+            }else{
+               Ext.MessageBox.alert('提示','请选择要删除的用户');
+            }
+          }
+        })
+        var userGrid =  new Ext.grid.GridPanel({
+          ds: userDS,
+          cm: userCM,
+          sm: userSM,
+          width: screenWidth-425,
+          height: screenHeight-338,
+          iconCls: 'icon-grid',
+          tbar:['-',addUserButton,editUserButton,delUserButton],
+          bbar: new Ext.PagingToolbar({
+            pageSize: pageSize,
+            store: userDS,
+            displayInfo: true,
+            displayMsg: "显示第 {0} 条到 {1} 条记录，一共 {2} 条",
+            emptyMsg: "没有记录"
+          })
+        });
+        userGrid.render('user_list');
+        userDS.load();
+
+      })
+
+    </script>
+  </head>
+
+  <body>
+    <div id="user_list"></div>
+  </body>
+</html>

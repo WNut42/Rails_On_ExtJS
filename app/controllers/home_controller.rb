@@ -15,13 +15,13 @@ class HomeController < ApplicationController
       session[:user_id] = user.id
       info = 'success'
     end
-    render :text => get_json(info),:layout => false 
+    render :text => get_result(info),:layout => false 
   end
 
   #退出系统
   def logout
     reset_session
-    render :text => get_json('注销成功'), :layout => false
+    render :text => get_result('注销成功'), :layout => false
   end
 
 
@@ -35,7 +35,7 @@ class HomeController < ApplicationController
         :children => [
           # --- 用户管理 ---
           { :id => 10, :name => '用户管理', :image => '/images/system/plugin.gif',
-            :url => '/users/users_list', :qtip => '用户管理', :leaf => true
+            :url => '/users/index', :qtip => '用户管理', :leaf => true
           }
         ]
       }
