@@ -43,6 +43,9 @@ class UsersController < ApplicationController
     rescue ActiveRecord::RecordNotFound
       logger.error '更新不存在的用户'
       info = '不存在的用户'
+    rescue Exception => e
+      logger.error e.to_s
+      info = e.to_s
     end
     render :text => get_result(info),:layout => false
   end
@@ -55,7 +58,7 @@ class UsersController < ApplicationController
       info = 'success'
     rescue Exception => e
       logger.error e.to_s
-      info e.to_s
+      info = e.to_s
     end
     render :text => get_result(info),:layout => false
   end
