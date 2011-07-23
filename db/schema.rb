@@ -10,7 +10,34 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110509090909) do
+ActiveRecord::Schema.define(:version => 20110722115425) do
+
+  create_table "articles", :force => true do |t|
+    t.string   "title"
+    t.integer  "category_id"
+    t.text     "content"
+    t.integer  "priority"
+    t.integer  "is_locked",    :limit => 1, :default => 0
+    t.integer  "lock_version",              :default => 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "categories", :force => true do |t|
+    t.string   "category_name"
+    t.integer  "is_locked",     :limit => 1, :default => 0
+    t.integer  "lock_version",               :default => 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "kindeditor_assets", :force => true do |t|
+    t.string   "asset"
+    t.integer  "file_size"
+    t.string   "file_type"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "users", :force => true do |t|
     t.string   "name"

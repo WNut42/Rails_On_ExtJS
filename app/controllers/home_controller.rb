@@ -29,16 +29,31 @@ class HomeController < ApplicationController
 
   @@menus_map = {
     1 => [
+      # === 文章管理 ===
+      { :id => 1, :name => '文章管理', :image => '/images/system/plugin.gif',
+        :url => 'articles', :qtip => '文章管理', :leaf => false,
+        :children => [
+          # --- 文章分类 ---
+          { :id => 10, :name => '文章分类', :image => '/images/system/plugin.gif',
+            :url => '/categories', :qtip => '文章分类', :leaf => true
+          },
+          # --- 文章管理 ---
+          { :id => 11, :name => '文章管理', :image => '/images/system/plugin.gif',
+            :url => '/articles', :qtip => '文章管理', :leaf => true
+          }
+        ]
+      },
       # === 后台管理 ===
-      { :id => 1, :name => '后台管理', :image => '/images/system/plugin.gif',
+      { :id => 2, :name => '后台管理', :image => '/images/system/plugin.gif',
         :url => 'users', :qtip => '后台管理', :leaf => false,
         :children => [
           # --- 用户管理 ---
-          { :id => 10, :name => '用户管理', :image => '/images/system/plugin.gif',
-            :url => '/users/index', :qtip => '用户管理', :leaf => true
+          { :id => 20, :name => '用户管理', :image => '/images/system/plugin.gif',
+            :url => '/users', :qtip => '用户管理', :leaf => true
           }
         ]
       }
+      
     ]
   }
 end

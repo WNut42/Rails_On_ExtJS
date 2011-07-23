@@ -1,9 +1,12 @@
 class ApplicationController < ActionController::Base
-  protect_from_forgery
+#  protect_from_forgery
 
 
   def user_authorize
-    redirect_to('/home/login') if session[:user_id] == nil
+    puts session[:user_id].to_s+'-------------------'
+    unless session[:user_id]
+      redirect_to('/home/login') 
+    end
   end
 
   def privilege_filter

@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>分类管理</title>
+    <script type="text/javascript">
+      var editCategoryWin;
+      var newCategoryWin;
+      var categoryId;
+      Ext.onReady(function(){
+
+        var categoryDS = new Ext.data.Store({
+          paramNames: {
+            start: "start",
+            limit: "limit"
+          },
+          baseParams: {
+            start: 0,
+            limit: 20
+          },
+          proxy: new Ext.data.HttpProxy({
+            url: '/categories/get_categories'
+          }),
+          reader: new Ext.data.JsonReader({
+            totalProperty: 'totalProperty',
+            root: 'root'
+          }, [
+            {name: 'id'},
+            {name: 'category_name'},
+            {name: 'created_at'}
+          ])
+        });
+        var categorySM = new Ext.grid.CheckboxSelectionModel();
+        var categoryCM = new Ext.grid.ColumnModel([
+          new Ext.grid.RowNumberer(),categorySM,
+          {header: '分类名称',dataIndex: 'category_name',width:200},
+          {header: '创建时间',dataIndex: 'created_at',width:150,renderer: Ext.util.Format.dateRenderer('Y-m-d H:i')}
+        ]);
+
+        var addCategoryButton = new Ext.Button({
+          text: '添加分类',
+          width: 50,
+          iconCls: 'addItem',
+          handler: function(){
+            newCategoryWin = new Ext.Window({
+              width: 300,
+              height: 140,
+              closeAction: 'destroy',
+              modal: true,
+              title: '添加分类',
+              autoLoad: {
+                url: '/categories/new',
+                scripts: true
+              }
+            });
+            newCategoryWin.on('destroy',function(){
+              categoryDS.reload();
+            });
+            newCategoryWin.resizable = false;
+            newCategoryWin.show();
+          }
+        })
+
+        var editCategoryButton = new Ext.Button({
+          text: '编辑分类',
+          width: 50,
+          iconCls: 'editItem',
+          handler: function(){
+            var records = categoryGrid.getSelectionModel().getSelections();
+            if(records.length == 0){
+              Ext.MessageBox.alert('提示信息','请选择要编辑的数据');
+            }else{
+              categoryId = records[0].get('id');
+              editCategoryWin = new Ext.Window({
+                title: '编辑分类',
+                width: 300,
+                height: 140,
+                closeAction: 'destroy',
+                modal: true,
+                autoLoad: {
+                  url: '/categories/'+categoryId,
+                  scripts: true
+                }
+              });
+              editCategoryWin.on('destroy',function(){
+                categoryDS.reload()
+              })
+              editCategoryWin.resizable = false;
+              editCategoryWin.show()
+            }
+          }
+        })
+
+        delCategoryButton = new Ext.Button({
+          text: '删除分类',
+          width: 50,
+          iconCls: 'remove',
+          handler: function(){
+            if(categoryGrid.getSelectionModel().hasSelection()){
+              var rs = categoryGrid.getSelectionModel().getSelections();
+              var ids = [];
+              var name = '';
+              for(var i = 0 ; i < rs.length ; i++){
+                var data = rs[i].data
+                ids.push(data.id);
+                name += data.name + '<br />'
+              }
+              var keys = Ext.util.JSON.encode(ids)
+              Ext.MessageBox.confirm('警告','确定删除分类?<br /><font color="red">' + name + '</font>',function(button){
+                if(button == 'yes'){
+                  Ext.Ajax.request({
+                    url: 'categories/destroy_list',
+                    method: 'post',
+                    success: function(response,opts){
+                      var data = Ext.util.JSON.decode(response.responseText);
+                      if(data.success&&data.info == 'success'){
+                        categoryDS.reload();
+                        Ext.Msg.alert('提示','已成功删除');
+                      }else{
+                        Ext.Msg.alert('提示',data.info);
+                      }
+                      
+                    },
+                    params:{'id':keys}
+                  })
+                }  
+              })
+            }else{
+               Ext.MessageBox.alert('提示','请选择要删除的分类');
+            }
+          }
+        })
+        var categoryGrid =  new Ext.grid.GridPanel({
+          ds: categoryDS,
+          cm: categoryCM,
+          sm: categorySM,
+          width: screenWidth-425,
+          height: screenHeight-338,
+          iconCls: 'icon-grid',
+          tbar:['-',addCategoryButton,editCategoryButton,delCategoryButton],
+          bbar: new Ext.PagingToolbar({
+            pageSize: pageSize,
+            store: categoryDS,
+            displayInfo: true,
+            displayMsg: "显示第 {0} 条到 {1} 条记录，一共 {2} 条",
+            emptyMsg: "没有记录"
+          })
+        });
+        categoryGrid.render('category_list');
+        categoryDS.load();
+
+      })
+
+    </script>
+  </head>
+
+  <body>
+    <div id="category_list"></div>
+  </body>
+</html>

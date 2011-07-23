@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>添加分类</title>
+    <script>
+      Ext.onReady(function(){
+        var name = new Ext.form.TextField({
+          fieldLabel: '分类名',
+          name:'category_name',
+          allowBlank: false,
+          anchor: '90%'
+        })
+
+        var okButton = new Ext.Button({
+          text: '确定',
+          handler: function(){
+            if(newCategoryForm.form.isValid()){
+              okButton.setDisabled(true);
+              newCategoryForm.form.submit({
+                method: 'post',
+                waitMsg: '正在保存信息...',
+                success: function(result,response){
+                  if(response.result.info == 'success'){
+                    newCategoryWin.destroy();
+                  }else{
+                    Ext.Msg.alert('提示',response.result.info);
+                    okButton.setDisabled(false)
+                  }
+                },
+                failure: function(result,response){
+                  Ext.Msg.alert('提示',result.responseText)
+                  okButton.setDisabled(false)
+                }
+              })
+            }else{
+              Ext.Msg.alert('提示','请填入必填项')
+            }
+          }
+        })
+
+        var cancelButton = new Ext.Button({
+          text: '取消',
+          handler: function(){
+            newCategoryWin.destroy();
+          }
+        })
+        
+        var newCategoryForm = new Ext.form.FormPanel({
+          labelAlign: 'top',
+          url:'/categories',
+          buttonAlign:'center',
+          bodyStyle: 'padding:5px',
+          labelWidth:100,
+          waitMsgTarget: true,
+          frame: true,
+          layout:'column',
+          items:[{
+            columnWidth:1,                         //占横列的50%
+            layout:'form',                         //放置fieldset的要是form样式，竖向排列
+            items:[name]
+          }],
+          buttons:[okButton,cancelButton]
+        });
+        newCategoryForm.render('new_category_form');
+      })
+    </script>
+  </head>
+  <body>
+    <div id="new_category_form"></div>
+  </body>
+</html>

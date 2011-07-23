@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+
+    <title>文章管理</title>
+    <script type="text/javascript">
+      var editArticleWin;
+      var newArticleWin;
+      var articleId;
+      Ext.onReady(function(){
+
+        var articleDS = new Ext.data.Store({
+          paramNames: {
+            start: "start",
+            limit: "limit"
+          },
+          baseParams: {
+            start: 0,
+            limit: pageSize
+          },
+          proxy: new Ext.data.HttpProxy({
+            url: '/articles/get_articles_for_page'
+          }),
+          reader: new Ext.data.JsonReader({
+            totalProperty: 'totalProperty',
+            root: 'root'
+          }, [
+            {name: 'id'},
+            {name: 'title'},
+            {
+              name: 'category_name',
+              mapping: 'category',
+              convert: function(v){
+                if(v){
+                  return v.category_name;
+                }else{
+                  return '暂无'
+                }
+              }
+            },
+            {
+              name: 'priority',
+              convert: function(v){
+                if(v==0){
+                  return '<font color=red>未顶置</font>'
+                }else{
+                  return '<font color=green>顶置</font>'
+                }
+              }
+            },
+            {name: 'updated_at'}
+          ])
+        });
+        var articleSM = new Ext.grid.CheckboxSelectionModel();
+        var articleCM = new Ext.grid.ColumnModel([
+          new Ext.grid.RowNumberer(),articleSM,
+          {header: '位置',dataIndex: 'priority',width:80},
+          {header: '文章分类',dataIndex: 'category_name',width:100},
+          {header: '文章标题',dataIndex: 'title',width:300},
+          {header: '更新时间',dataIndex: 'updated_at',width:120,renderer: Ext.util.Format.dateRenderer('Y-m-d H:i')}
+        ]);
+
+        var addArticleButton = new Ext.Button({
+          text: '添加文章',
+          width: 50,
+          iconCls: 'addItem',
+          handler: function(){
+            newArticleWin = new Ext.Window({
+              width: 817,
+              height: 540,
+              closeAction: 'destroy',
+              modal: true,
+              title: '添加文章',
+              autoLoad: {
+                url: '/articles/new',
+                scripts: true
+              }
+            });
+            newArticleWin.on('destroy',function(){
+              KE.remove('content');
+              articleDS.reload();
+            });
+            newArticleWin.resizable = false;
+            newArticleWin.show();
+          }
+        })
+
+        var editArticleButton = new Ext.Button({
+          text: '编辑文章',
+          width: 50,
+          iconCls: 'editItem',
+          handler: function(){
+            var records = articleGrid.getSelectionModel().getSelections();
+            if(records.length == 0){
+              Ext.MessageBox.alert('提示信息','请选择要编辑的数据');
+            }else{
+              articleId = records[0].get('id');
+              editArticleWin = new Ext.Window({
+                title: '编辑文章',
+                width: 817,
+                height: 540,
+                closeAction: 'destroy',
+                modal: true,
+                autoLoad: {
+                  url: '/articles/'+articleId,
+                  scripts: true
+                }
+              });
+              editArticleWin.on('destroy',function(){
+                KE.remove('content');
+                articleDS.reload();
+              })
+              editArticleWin.resizable = false;
+              editArticleWin.show()
+            }
+          }
+        })
+
+        var delArticleButton = new Ext.Button({
+          text: '删除文章',
+          width: 50,
+          iconCls: 'remove',
+          handler: function(){
+            if(articleGrid.getSelectionModel().hasSelection()){
+              var rs = articleGrid.getSelectionModel().getSelections();
+              var ids = [];
+              var name = '';
+              for(var i = 0 ; i < rs.length ; i++){
+                var data = rs[i].data
+                ids.push(data.id);
+                name += data.name + '<br />'
+              }
+              var keys = Ext.util.JSON.encode(ids)
+              Ext.MessageBox.confirm('警告','确定删除文章?<br /><font color="red">' + name + '</font>',function(button){
+                if(button == 'yes'){
+                  Ext.Ajax.request({
+                    url: 'articles/destroy_list',
+                    method: 'post',
+                    success: function(response,opts){
+                      var data = Ext.util.JSON.decode(response.responseText);
+                      if(data.success&&data.info == 'success'){
+                        articleDS.reload();
+                        Ext.Msg.alert('提示','已成功删除');
+                      }else{
+                        Ext.Msg.alert('提示',data.info);
+                      }
+                      
+                    },
+                    params:{'id':keys}
+                  })
+                }  
+              })
+            }else{
+              Ext.MessageBox.alert('提示','请选择要删除的文章');
+            }
+          }
+        })
+        var articleGrid =  new Ext.grid.GridPanel({
+          ds: articleDS,
+          cm: articleCM,
+          sm: articleSM,
+          width: screenWidth-425,
+          height: screenHeight-338,
+          iconCls: 'icon-grid',
+          tbar:['-',addArticleButton,editArticleButton,delArticleButton],
+          bbar: new Ext.PagingToolbar({
+            pageSize: pageSize,
+            store: articleDS,
+            displayInfo: true,
+            displayMsg: "显示第 {0} 条到 {1} 条记录，一共 {2} 条",
+            emptyMsg: "没有记录"
+          })
+        });
+        articleGrid.render('article_list');
+        articleDS.load();
+
+      })
+
+    </script>
+  </head>
+
+  <body>
+    <div id="article_list"></div>
+  </body>
+</html>

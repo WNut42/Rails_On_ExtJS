@@ -9,6 +9,7 @@
     <%= javascript_include_tag "ext/ext-all.js" %>
     <%= javascript_include_tag "ext/src/locale/ext-lang-zh_CN.js" %>
     <%= javascript_include_tag "application.js"%>
+    <%= javascript_include_tag "kindeditor/kindeditor.js"%>
 
     <script type="text/javascript">
       Ext.QuickTips.init();
@@ -48,7 +49,9 @@
           region:'west',
           margins:'5 0 5 5',
           split:true,
-          width: 140,
+          title: '功能菜单',
+          collapsible: true,
+          width: 170,
           layout:'accordion'
         });
 

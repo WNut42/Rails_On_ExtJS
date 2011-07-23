@@ -31,7 +31,7 @@
             if(editUserForm.form.isValid()){
               okButton.setDisabled(true);
               editUserForm.form.submit({
-                method: 'post',
+                method: 'put',
                 waitMsg: '正在保存信息...',
                 success: function(result,response){
                   if(response.result.info == 'success'){
@@ -61,7 +61,7 @@
         
         var editUserForm = new Ext.form.FormPanel({
           labelAlign: 'top',
-          url:'/users/update?id='+userId,
+          url:'/users/'+userId,
           buttonAlign:'center',
           bodyStyle: 'padding:5px',
           labelWidth:100,
@@ -89,7 +89,8 @@
                
         
         editUserForm.form.load({
-          url: '/users/edit?id=' + userId,
+          url: '/users/' + userId+'/edit',
+          method: 'get',
           success: function(form, action){
           },
           failure: function(form, action){

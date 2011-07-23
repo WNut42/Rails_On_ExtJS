@@ -79,7 +79,7 @@
                 closeAction: 'destroy',
                 modal: true,
                 autoLoad: {
-                  url: '/users/show?id='+userId,
+                  url: '/users/'+userId,
                   scripts: true
                 }
               });
@@ -110,7 +110,7 @@
               Ext.MessageBox.confirm('警告','确定删除用户?<br /><font color="red">' + name + '</font>',function(button){
                 if(button == 'yes'){
                   Ext.Ajax.request({
-                    url: 'users/destroy', 
+                    url: 'users/destroy_list',
                     method: 'post',
                     success: function(response,opts){
                       var data = Ext.util.JSON.decode(response.responseText);

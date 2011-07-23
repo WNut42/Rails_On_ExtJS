@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>添加文章</title>
+    <script>
+      Ext.onReady(function(){
+        var title = new Ext.form.TextField({
+          fieldLabel: '文章标题',
+          name:'title',
+          allowBlank: false,
+          anchor: '100%'
+        })
+
+        var categoryDS = new Ext.data.Store({
+          proxy:new Ext.data.HttpProxy({url:'/categories/get_categories'}),
+          autoLoad:true,
+          reader:new Ext.data.JsonReader({
+            totalProperty: 'total',
+            root:'root'
+          }, [
+            {name:'category_name'},
+            {name:'id'}
+          ])
+        });
+        var category = new Ext.form.ComboBox({ 
+          store: categoryDS,
+          hiddenName:'category_id',        
+          displayField:'category_name',           
+          valueField:'id',                
+          typeAhead: true,
+          allowBlank: false,
+          readOnly:false,
+          anchor: '80%',
+          mode: 'remote',
+          fieldLabel:'文章分类',
+          forceSelection: true,
+          triggerAction: 'all',
+          emptyText:'请选择文章分类.....',
+          selectOnFocus:true
+        });
+
+        var priority = new Ext.form.RadioGroup({
+          fieldLable: '顶置',
+          anchor: '80%',
+          items:[
+            {boxLabel: '顶置', name: 'priority', inputValue: 1, checked: true},
+            {boxLabel: '未顶置', name: 'priority', inputValue: 0}
+          ]
+        })
+
+        var content = new Ext.form.TextArea({
+          fieldLabel: '文章内容',
+          name: 'content',
+          id: 'content',
+          height: '320px',
+          allowBlank: false,
+          anchor: '100%',
+          listeners: {
+            render:function(){
+              KE.show({
+                id:'content',
+                resizeMode : 0,
+                allowFileManager : true,
+                imageUploadJson : '/kindeditor/upload',
+                fileManagerJson : '/kindeditor/filemanager'
+              });
+              setTimeout("KE.create('content');", 10);
+            }
+          }
+        })
+
+        var okButton = new Ext.Button({
+          text: '确定',
+          handler: function(){
+            KE.sync('content');
+            if(newArticleForm.form.isValid()){
+              okButton.setDisabled(true);
+              newArticleForm.form.submit({
+                method: 'post',
+                waitMsg: '正在保存信息...',
+                success: function(result,response){
+                  if(response.result.info == 'success'){
+                    newArticleWin.destroy();
+                    KE.remove('content');
+                  }else{
+                    Ext.Msg.alert('提示',response.result.info);
+                    okButton.setDisabled(false)
+                  }
+                },
+                failure: function(result,response){
+                  Ext.Msg.alert('提示',result.responseText)
+                  okButton.setDisabled(false)
+                }
+              })
+            }else{
+              Ext.Msg.alert('提示','请填入必填项')
+            }
+          }
+        })
+
+        var cancelButton = new Ext.Button({
+          text: '取消',
+          handler: function(){
+            KE.remove('content');
+            newArticleWin.destroy();
+          }
+        })
+        
+        var newArticleForm = new Ext.form.FormPanel({
+          labelAlign: 'top',
+          url:'/articles',
+          buttonAlign:'center',
+          bodyStyle: 'padding:5px',
+          labelWidth:100,
+          waitMsgTarget: true,
+          frame: true,
+          items:[{
+              layout:'column',
+              items:[{
+                  columnWidth:1,
+                  layout: 'form',
+                  items: [title]
+                }]
+            },{
+              layout:'column',
+              items:[{
+                  columnWidth:.5,
+                  layout: 'form',
+                  items: [category]
+                },{
+                  columnWidth:.5,
+                  layout: 'form',
+                  items: [priority]
+                }]
+            },content],
+          buttons:[okButton,cancelButton]
+        });
+        newArticleForm.render('new_article_form');
+      })
+    </script>
+  </head>
+  <body>
+    <div id="new_article_form"></div>
+  </body>
+</html>

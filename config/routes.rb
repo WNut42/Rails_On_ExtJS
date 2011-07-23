@@ -1,5 +1,27 @@
 RailsOnExtJS::Application.routes.draw do
-  #resources :users,:member => {:users_list => :get}
+  resources :users do
+    collection do
+      get :users_list
+      get :get_users_for_page
+      get :destroy_list
+    end
+  end
+
+  resources :articles do
+    collection do
+      get :articles_list
+      get :get_articles_for_page
+      get :destroy_list
+    end
+  end
+
+  resources :categories do
+    collection do
+      get :categories_list
+      get :get_categories
+      get :destroy_list
+    end
+  end
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

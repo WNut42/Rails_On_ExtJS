@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="no-cache"/>
+    <meta http-equiv="Expires" content="-1"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title>查看分类</title>
+
+    <script type="text/javascript">
+      Ext.onReady(function(){
+ 
+        categoryId = <%= params[:id] %>;
+        var name = new Ext.form.TextField({
+          fieldLabel: '分类名',
+          name:'name',
+          allowBlank: false,
+          anchor: '90%'
+        })
+
+        var age = new Ext.form.NumberField({
+          fieldLabel: '年龄',
+          name:'age',
+          allowBlank: false,
+          anchor: '90%'
+        })
+
+        var okButton = new Ext.Button({
+          text: '确定',
+          handler: function(){
+            if(editCategoryForm.form.isValid()){
+              okButton.setDisabled(true);
+              editCategoryForm.form.submit({
+                method: 'post',
+                waitMsg: '正在保存信息...',
+                success: function(result,response){
+                  if(response.result.info == 'success'){
+                    editCategoryWin.destroy();
+                  }else{
+                    Ext.Msg.alert('提示',response.result.info);
+                    okButton.setDisabled(false)
+                  }
+                },
+                failure: function(result,response){
+                  Ext.Msg.alert('提示',result.responseText)
+                  okButton.setDisabled(false)
+                }
+              })
+            }else{
+              Ext.Msg.alert('提示','请填入必填项')
+            }
+          }
+        })
+
+        var cancelButton = new Ext.Button({
+          text: '取消',
+          handler: function(){
+            editCategoryWin.destroy();
+          }
+        })
+        
+        var editCategoryForm = new Ext.form.FormPanel({
+          labelAlign: 'top',
+          url:'/categorys/'+categoryId,
+          buttonAlign:'center',
+          bodyStyle: 'padding:5px',
+          labelWidth:100,
+          waitMsgTarget: true,
+          frame: true,
+          layout:'column',
+          reader:new Ext.data.JsonReader({
+          },[
+            {name:'id'},
+            {name:'name'},
+            {name:'age'}
+          ]
+          ),
+          items:[{
+            columnWidth:.5,                         //占横列的50%
+            layout:'form',                         //放置fieldset的要是form样式，竖向排列
+            items:[name]
+          },{
+            columnWidth:.5,
+            layout:'form',
+            items:[age]
+          }],
+          buttons:[okButton,cancelButton]
+        });
+               
+        
+        editCategoryForm.form.load({
+          url: '/categorys/' + categoryId+'/edit',
+          method: 'get',
+          success: function(form, action){
+          },
+          failure: function(form, action){
+            Ext.MessageBox.alert('提示信息', '信息加载失败');
+          }
+        });
+        editCategoryForm.render('edit_category_form');
+      })
+    </script>
+  </head>
+  <body>
+    <div id="edit_category_form"></div>
+  </body>
+</html>

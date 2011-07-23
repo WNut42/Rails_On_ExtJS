@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
-
+  before_filter :user_authorize
+  before_filter :privilege_filter
 
   def new
 
@@ -45,20 +46,20 @@ class UsersController < ApplicationController
       info = '不存在的用户'
     rescue Exception => e
       logger.error e.to_s
-      info = e.to_s
+      info = "更新异常"
     end
     render :text => get_result(info),:layout => false
   end
 
 
-  def destroy
+  def destroy_list
     begin
       ids = params[:id][1..params[:id].length-2].split(',')
       User.destroy(ids)
       info = 'success'
     rescue Exception => e
       logger.error e.to_s
-      info = e.to_s
+      info = "更新异常"
     end
     render :text => get_result(info),:layout => false
   end
@@ -66,8 +67,7 @@ class UsersController < ApplicationController
   def get_users_for_page
     users = User.find_for_page params[:start].to_i,params[:limit].to_i 
     count = User.count :all
-    json_str = get_json count,users.to_json
     
-    render :text => json_str,:layout => false
+    render :text => get_json(count,users.to_json),:layout => false
   end
 end
